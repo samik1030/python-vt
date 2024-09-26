@@ -1,26 +1,19 @@
-#Virtual Trading Application - Version 1.0
+import mysql.connector    # connector for MySQL
+import time               # time library module 
+import math               # math library module 
+from os import system, name  # system library module
 
-import mysql.connector    #connector for MySQL
-import time               #time library module 
-import math               #math library module 
-from os import system, name     #system library module
-
-#database credentials will be changed once after completion of the project
-#Demo db is used for production 
+# Database credentials will be changed once after completion of the project
+# Demo db is used for production 
 mydb = mysql.connector.connect(
-  host="103.211.216.137",
-  user="kivaabip_stocks",
-  password="hdepl@2020",
-  database="kivaabip_stockmarket"
+    host="103.211.216.137",
+    user="kivaabip_stocks",
+    password="hdepl@2020",
+    database="kivaabip_stockmarket"
 )
 
-#cursor object for running the sql querries
+# Cursor object for running the SQL queries
 mycursor = mydb.cursor()
-
-username = 0
-cashbal = 0             
-holdingbal = 0
-overallbal = 0
 
 def clear():
     if name == 'nt':
@@ -28,7 +21,7 @@ def clear():
     else:
         _ = system('clear')
 
-def mainmenu():
+def mainmenu(username):
     print("Main Menu")
     print("1: View Balance")
     print("2: Trade")
@@ -37,31 +30,34 @@ def mainmenu():
 
     match opt:
         case 1:
-            balance()
+            balance(username)
         case 2:
-            trade()
+            trade(username)
         case 0:
             exit()
         case _:
-            print("Error : Select a valid Option.")
-            mainmenu()
+            print("Error: Select a valid Option.")
+            mainmenu(username)
 
-def balance():
+def balance(username):
     sql1 = "SELECT * FROM account WHERE username = %s"
     val1 = (username, )
     mycursor.execute(sql1, val1)
     row1 = mycursor.fetchall()
     
-    for x in row1:
-        cashbal = x[2]
-        holdingbal = x[3]
-        overallbal = x[4]
-    print("Dashboard")
-    print("Cash Balance    : ₹", cashbal)
-    print("Holding Balance : ₹", holdingbal)
-    print("Overall Balance : ₹", overallbal)
-    
-def trade():
+    if row1:
+        for x in row1:
+            cashbal = x[2]
+            holdingbal = x[3]
+            overallbal = x[4]
+        print("Dashboard")
+        print("Cash Balance    : ₹", cashbal)
+        print("Holding Balance : ₹", holdingbal)
+        print("Overall Balance : ₹", overallbal)
+    else:
+        print("No account information found.")
+
+def trade(username):
     print("Trade")
     print("1: Buy / Sell ")
     print("2: View Holdings")
@@ -82,44 +78,46 @@ def trade():
                     sell()
                 case _:
                     print("Invalid Option!")
-                    mainmenu()
+                    mainmenu(username)
         case 2:
-            holdings()
+            holdings(username)
         case 3:
             orders()        
         case 4:
-            viewallstocks()
+            viewallstocks(username)
         case 9:
-            mainmenu()
+            mainmenu(username)
         case 0:
             exit()
         case _:
-            print("Invalid Optin")
-            mainmenu()
+            print("Invalid Option")
+            mainmenu(username)
+
 def buy():
     print("Buy Stocks")
 
 def sell():
     print("Sell Stocks")
 
-def holdings():
+def holdings(username):
     print("Holdings")
 
 def orders():
     print("View Orders")
 
-def viewallstocks():
+def viewallstocks(username):
     print("View All Stocks")
     sql = "SELECT * FROM holdings WHERE username = %s"
     val = (username, )
     mycursor.execute(sql, val)
     row = mycursor.fetchall()
-    if row == None:
+    if not row:
         print("You have not bought any stocks")
-        trade()
-    for x in row:
-        print(x[2], " - ", x[3])
-        
+        trade(username)
+    else:
+        for x in row:
+            print(x[2], " - ", x[3])
+
 def start():
     print("1 : Login")
     print("2 : Sign Up")
@@ -133,7 +131,6 @@ def start():
             exit()
 
 def login():
-    global username
     username = int(input("Enter your Mobile Number : "))
     password = input("Enter the password : ")
 
@@ -143,15 +140,15 @@ def login():
 
     row = mycursor.fetchone()
 
-    if(row==None):
+    if row is None:
         print("User Doesn't exist")
         print("")
         login()
-    if(password == row[2]):
+    elif password == row[2]:
         print("Login Verified")
-        mainmenu()
+        mainmenu(username)
     else:
-        print("Invalid Username or Password !")
+        print("Invalid Username or Password!")
         print("Relaunch the application")
 
 def signup():
@@ -161,9 +158,9 @@ def signup():
     mycursor.execute(sql2, val2)
     row2 = mycursor.fetchone()
     print(row2)
-    if(row2 != None):
+    if row2 is not None:
         print("Username already exists")
-        print("Choose other username or Login if already Signed Up")
+        print("Choose another username or Login if already Signed Up")
         signup()
     password = input("Enter the Password (a-z, A-Z, 0-9, !@#$& ) : ")
     
@@ -181,5 +178,4 @@ def signup():
     login()
 
 clear()
-
 start()
